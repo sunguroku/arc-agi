@@ -154,11 +154,3 @@ def extract_array(content: str):
         return None
 
     return output
-
-
-def main():
-    print("hello")
-
-
-if __name__ == "__main__":
-    main()
