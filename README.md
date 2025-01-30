@@ -109,7 +109,7 @@ I like this idea of treating the LLM as nothing but a code generator that just t
 
 ### 2. Evolutionary Method with Transduction
 
-This approach did not perform as well as #1, at least on the limited sample of 10. I hypothesize that the main reason this approach underperforms compared to the evolutionary method with induction is because "natural language program" that the model generates in form of "reasoning" is not as good at storing and propagating information learned across multiple generations as code. This is something I expected, but I expected that there would be some tasks that this approach would be able to solve that the evolutionary method with induction would not, given the conclusion of the ARC Prize paper that induction and transduction are highly complementary. To be fair, I'm working with a severly limited sample size, but I did not see any tasks that this approach was able to solve that the evolutionary method with induction was not able to. Empirically, I also found that the model rarely draws information from the previous reasoning threads to generate a new output grid - this is something I could improve by experimenting further with prompts.
+This approach did not perform as well as #1, at least on the limited sample of 10. I hypothesize that the main reason this approach underperforms compared to the evolutionary method with induction is because "natural language program" that the model generates in form of "reasoning" is not as good at storing and propagating information learned across multiple generations as code. This is something I expected, but I expected that there would be some tasks that this approach would be able to solve that the evolutionary method with induction would not, based on the first place ARC Prize paper that states that induction and transduction are highly complementary. To be fair, I'm working with a severly limited sample size, but I did not see any tasks that this approach was able to solve that the evolutionary method with induction was not able to. Empirically, I also found that the model rarely draws information from the previous reasoning threads to generate a new output grid - this is something I could improve by experimenting further with prompts.
 
 ### 3. Transduction & Induction Hybrid
 
@@ -198,9 +198,9 @@ Result for example 1:
 
 ```
 
-## Alternate approach worth trying
+## Alternate approach I plan to try
 
-DreamCoder-Style Abstraction Sleep
+### DreamCoder-Style Abstraction Sleep
 
 While running the evolutionary methods, I noticed that the LLM sometimes finds commonalities between the top 2 programs and implements modular functions that are called as subroutines within the transform function. I came across the [DreamCoder paper](https://arxiv.org/pdf/2006.08381) by Ellis et al that includes an Abstraction Sleep phase, in which the authors generate higher-level program abstractions by refactoring the DSL code that the recognition model generates during its wake phase and adds them to a library of functions that the model can use.
 

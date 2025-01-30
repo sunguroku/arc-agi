@@ -290,7 +290,12 @@ def hybrid_method(task, logfile):
 
         # Execute the response and check if correct
         try:
-            solved, _, results, _, pixel_correctness = evaluate_response(response, task)
+            # Example usage
+            evaluator = GridEvaluator(task)
+            solved, code, results, correctness, pixel_correctness = (
+                evaluator.evaluate_response(response)
+            )
+            # solved, _, results, _, pixel_correctness = evaluate_response(response, task)
         except Exception as e:
             if "<output>" in response:
                 print("Internal error handling transduction case:" + str(e))
