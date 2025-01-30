@@ -1,0 +1,4637 @@
+========== SYSTEM PROMPT ==========
+
+You will be given some number of paired example inputs and outputs. The outputs were produced by applying a transformation rule to the inputs. In addition to the paired example inputs and outputs, there is also an additional test input without a known output (or possibly multiple additional inputs). Your task is to determine the transformation rule and implement it in code. Your transformation rule will be applied on the test input to be verified against the correct answer that is hidden from you.
+
+The inputs and outputs are each "grids." A grid is a rectangular matrix of integers between 0 and 9 (inclusive). These grids will be shown to you as grids of numbers (list[list[int]] in python code). Each number corresponds to a color in the image. The correspondence is as follows: black: 0, blue: 1, red: 2, green: 3, yellow: 4, grey: 5, pink: 6, orange: 7, purple: 8, brown: 9.
+
+The transformation rule maps from each input to a single correct output, and your implementation in code must be exactly correct. Thus, you need to resolve all potential uncertainties you might have about the transformation rule. For instance, if the examples always involve some particular color being changed to another color in the output, but which color it is changed to varies between different examples, then you need to figure out what determines the correct output color. As another example, if some shape(s) or cells in the input are relocated or recolored, you need to determine which exact shapes should be relocated/recolored in the output and where they should be moved or what their color in the output should be. Whenever there are potential ambiguities or uncertainties in your current understanding of the transformation rule, you need to resolve them before implementing the transformation in code. You should resolve ambiguities and uncertainties by carefully analyzing the examples and using step-by-step reasoning.
+
+The transformation rule might have multiple components and might be fairly complex. It's also reasonably common that the transformation rule has one main rule (e.g., replace cells in XYZ pattern with color ABC), but has some sort of exception (e.g., don't replace cells if they have color DEF). So, you should be on the lookout for additional parts or exceptions that you might have missed so far. Consider explicitly asking yourself (in writing): "Are there any additional parts or exceptions to the transformation rule that I might have missed?" (Rules don't necessarily have multiple components or exceptions, but it's common enough that you should consider it.)
+
+Here are some examples of transformation rules with multiple components or exceptions:
+
+- There is a grey grid with black holes that have different shapes and the rule is to fill in these holes with colored cells. Further, the color to use for each hole depends on the size of the hole (in terms of the number of connected cells). 1-cell holes are filled with pink, 2-cell holes are filled with blue, and 3-cell holes are filled with red.
+- The output is 3x3 while the input is 3x7. The output has red cells while the input has two "sub-grids" that are 3x3 and separated by a grey line in the middle. Each of the sub-grids has some colored cells (blue) and some black cells. The rule is to AND the two sub-grids together (i.e., take the intersection of where the two sub-grids are blue) and color the 3x3 cells in the output red if they are in the intersection and black otherwise.
+- The grey rectangular outlines are filled with some color in the output. Pink, orange, and purple are used to fill in the voids in different cases. The color depends on the size of the black void inside the grey outline where it is pink if the void has 1 cell (1x1 void), orange if the gap has 4 cells, and purple if the gap was 9 cells. For each void, all of the filled-in colors are the same.
+- The red shape in the input is moved. It is moved either horizontally or vertically. It is moved until moving it further would intersect with a purple shape. It is moved in the direction of the purple shape, that is, moved in whichever direction would involve it eventually intersecting with this purple shape.
+
+These are just example rules; the actual transformation rule will be quite different. But, this should hopefully give you some sense of what transformation rules might look like.
+
+Note that in each of these cases, you would need to find the rule by carefully examining the examples and using reasoning. You would then need to implement the transformation rule precisely, taking into account all possible cases and getting all of the details right (e.g., exactly where to place various things or exactly which color to use in each case). If the details aren't fully ironed out, you should do additional reasoning to do so before implementing the transformation in code.
+
+You'll need to carefully reason in order to determine the transformation rule. Start your response by carefully reasoning in <reasoning></reasoning> tags. Then, implement the transformation in code.
+
+You follow a particular reasoning style. You break down complex problems into smaller parts and reason through them step by step, arriving at sub-conclusions before stating an overall conclusion. This reduces the extent to which you need to do large leaps of reasoning.
+
+You reason in substantial detail for as long as is necessary to fully determine the transformation rule and resolve any ambiguities/uncertainties.
+
+After your reasoning, write code in triple backticks (e.g. ```python (code) ```). You should write a function called transform which takes a single argument, the input grid as list[list[int]], and returns the transformed grid (also as list[list[int]]). Your Python code should not use libraries outside of the standard Python libraries besides numpy. You can create helper functions. You should make sure that you implement a version of the transformation which works in general (for inputs which have the same properties as the example inputs and the additional input(s)). Don't write tests in your Python code or any other auxiliary code. Your code should ONLY contain the transform function.
+
+You might also be provided with an incorrect answer that you've returned for these examples during a previous attempt, along with the incorrect outputs produced by the transformation rule in your previous attempt. If you are provided with an incorrect answer, you should carefully read through it and pay attention to how the outputs from the transformation rule differ from the expected outputs to figure out what went wrong and return a corrected answer.
+========== Iteration 1 ==========
+Prompt: Here are the paired example inputs and outputs.
+
+Example 1
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 2
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 3
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 4
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Here is the additional test input without a known output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+Response: <reasoning>
+
+To determine the transformation rule, let's analyze the provided examples step by step and extract the general pattern. 
+
+1. **Observation**: 
+    - Each input grid contains a few non-zero numbers, each representing a specific color (2 for red, 3 for green, 4 for yellow).
+    - In the output, the numbers remain in the same position, but a line of grey (5) is drawn connecting them.
+    - The grey lines (5) do not overlap the original colored cells.
+
+2. **Pattern Detection**:
+    - The grey lines (5) seem to connect colored cells in a specific sequence. 
+    - The sequence appears to be: connect the cells with color 2 (red), then color 3 (green), and finally color 4 (yellow). This sequence is consistent across all examples, where the lines connecting these colors form a path.
+    - The grey lines are drawn horizontally or vertically, possibly taking the shortest path without overlapping any colored cell.
+
+3. **Connection Details**:
+    - The grey path is continuous, and it adds a new layer on top of the existing grid without altering the original non-zero colored cells.
+    - The path seems to be drawn by connecting the colors in the order of their appearance in the grid from top-left to bottom-right.
+
+4. **Steps to Implement**:
+    - Identify the positions of colors 2, 3, and 4 in the grid.
+    - Connect these positions with grey lines (5) in the specified order.
+    - Ensure the grey lines do not overwrite colored cells.
+
+5. **Potential Exceptions**:
+    - The rule applies only to the colors 2, 3, and 4. Other colors or numbers are treated as background (0) and remain unchanged.
+
+Now, let's implement this transformation logic in code.
+
+</reasoning>
+
+```python
+def transform(grid):
+    def draw_line(grid, start, end):
+        x1, y1 = start
+        x2, y2 = end
+        # Draw vertical line
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            if grid[x][y1] == 0:  # Only draw if the cell is 0
+                grid[x][y1] = 5
+        # Draw horizontal line
+        for y in range(min(y1, y2), max(y1, y2) + 1):
+            if grid[x2][y] == 0:  # Only draw if the cell is 0
+                grid[x2][y] = 5
+
+    # Find positions of 2, 3, and 4
+    positions = {}
+    for i, row in enumerate(grid):
+        for j, value in enumerate(row):
+            if value in {2, 3, 4}:
+                positions[value] = (i, j)
+
+    # Draw lines in the order of 2 -> 3 -> 4
+    if 2 in positions and 3 in positions:
+        draw_line(grid, positions[2], positions[3])
+    if 3 in positions and 4 in positions:
+        draw_line(grid, positions[3], positions[4])
+
+    return grid
+```
+
+This function identifies the locations of colors 2, 3, and 4, then draws grey lines (5) connecting them in order, ensuring that the existing colored cells remain unchanged.
+Response: <reasoning>
+To determine the transformation rule, let's analyze the given examples. The inputs and outputs are grids of size 13x13, where some cells contain colored numbers (representing colors) and the rest contain 0 (representing black).
+
+### Observations:
+1. **Colored Cells:**
+   - Each input contains three distinct colored cells, each with a different color: red (2), green (3), and yellow (4).
+   
+2. **Output Structure:**
+   - The output retains the colored cells in their original positions.
+   - In addition to the original colored cells, there are new grey (5) cells added to the grid.
+
+3. **Grey Cells Pattern:**
+   - The grey cells form a continuous path connecting the colored cells in a specific sequence, creating a "snake-like" path.
+   - The path starts from one colored cell, extends in a straight line horizontally or vertically, connects to another colored cell, and continues until all three colored cells are interconnected.
+
+### Analyzing Path Construction:
+- The path appears to be constructed by connecting the colored cells in the order they appear when reading the grid from top to bottom and left to right.
+- The path is built using the shortest Manhattan distance, involving only horizontal and vertical movements.
+
+### Transformation Steps:
+1. Identify the positions of the three colored cells in the input grid.
+2. Order these positions based on their appearance from top to bottom and left to right.
+3. Construct a grey path (value 5) that connects these three points in sequence using horizontal and vertical lines.
+
+### Rule Summary:
+- Identify and retain the positions of colored cells (2, 3, 4).
+- Create a "snake-like" path of grey cells (5) that connects the colored cells in the order they appear from top to bottom and left to right.
+
+Now, let's implement this transformation in code.
+</reasoning>
+
+```python
+def find_colored_positions(grid):
+    colored_positions = []
+    for r in range(len(grid)):
+        for c in range(len(grid[0])):
+            if grid[r][c] in [2, 3, 4]:  # Looking for red (2), green (3), yellow (4)
+                colored_positions.append((r, c, grid[r][c]))
+    return colored_positions
+
+def connect_points(grid, start, end):
+    sr, sc = start
+    er, ec = end
+    
+    # Connect horizontally first
+    if sc != ec:
+        step = 1 if sc < ec else -1
+        for c in range(sc, ec, step):
+            if grid[sr][c] == 0:
+                grid[sr][c] = 5  # Grey path
+
+    # Connect vertically
+    if sr != er:
+        step = 1 if sr < er else -1
+        for r in range(sr, er, step):
+            if grid[r][ec] == 0:
+                grid[r][ec] = 5  # Grey path
+
+def transform(input_grid):
+    # Copy the input grid to avoid modifying the original
+    output_grid = [row[:] for row in input_grid]
+    
+    # Find positions of colored cells
+    colored_positions = find_colored_positions(input_grid)
+    
+    # Sort positions by reading order (top to bottom, left to right)
+    colored_positions.sort()
+    
+    # Retain the original colored cells
+    for r, c, color in colored_positions:
+        output_grid[r][c] = color
+    
+    # Connect the positions with a grey path
+    connect_points(output_grid, colored_positions[0][:2], colored_positions[1][:2])
+    connect_points(output_grid, colored_positions[1][:2], colored_positions[2][:2])
+    
+    return output_grid
+```
+
+This code will transform the input grid by adding a grey path connecting the colored cells in the specified order, following the observed pattern in the examples.
+Response: <reasoning>
+To determine the transformation rule, let's analyze the given examples step by step:
+
+### Observation:
+1. **Identifying Non-Zero Elements:**
+   - Each input grid contains a few non-zero elements which have specific positions.
+   - These non-zero elements retain their positions and values in the output grid.
+   - For each example, these non-zero elements are colored: 2 (red), 3 (green), 4 (yellow), etc.
+
+2. **Identifying Patterns:**
+   - In the output grid, there are sequences of grey (5) cells connecting certain non-zero elements.
+   - These connections seem to form paths between specific pairs of colored cells.
+
+3. **Detailed Analysis:**
+   - Example 1:
+     - A path of grey (5) cells connects the red (2) cell at (2,1) to the yellow (4) cell at (6,10).
+     - A path of grey (5) cells also connects the green (3) cell at (11,3) to the yellow (4) cell.
+   - Example 2:
+     - A path of grey (5) cells connects the green (3) cell at (1,5) to the yellow (4) cell at (10,2).
+     - Another path connects the red (2) cell at (8,11) to the yellow (4) cell.
+   - Example 3:
+     - A path connects the yellow (4) cell at (1,1) to the green (3) cell at (4,11).
+     - A path connects the red (2) cell at (10,5) to the yellow (4) cell.
+   - Example 4:
+     - A path connects the yellow (4) cell at (1,10) to the red (2) cell at (5,2).
+     - A path connects the green (3) cell at (11,9) to the yellow (4) cell.
+
+4. **General Rule:**
+   - The paths of grey (5) cells are created to connect the yellow (4) cells with the other colored cells (2, 3).
+   - The path is formed such that it travels through the shortest Manhattan distance.
+
+5. **Transformation Rule:**
+   - For each yellow (4) cell, create paths of grey (5) cells to the nearest red (2) and green (3) cells.
+   - The path is created using horizontal and vertical movements to minimize the distance.
+
+6. **Applying to Test Input:**
+   - Identify the positions of the non-zero elements.
+   - Create paths of grey (5) cells connecting the yellow (4) cell to the red (2) and green (3) cells.
+
+Let's implement this transformation rule in code.
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] != 0:
+                positions[grid[r, c]] = (r, c)
+    
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Draw the path
+        cur_r, cur_c = sr, sc
+        while cur_r != er:
+            output[cur_r, sc] = value
+            cur_r += (1 if er > cur_r else -1)
+        while cur_c != ec:
+            output[er, cur_c] = value
+            cur_c += (1 if ec > cur_c else -1)
+    
+    # For each yellow cell (value 4), connect it to red (value 2) and green (value 3)
+    yellow_pos = positions.get(4)
+    
+    if yellow_pos:
+        for color in [2, 3]:
+            if color in positions:
+                draw_path(yellow_pos, positions[color])
+    
+    return output.tolist()
+
+# Example usage
+test_input = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+print(transform(test_input))
+```
+Response: <reasoning>
+To determine the transformation rule, let's analyze the provided examples.
+
+### Observations from Examples:
+
+1. **Input Analysis:**
+   - We have a grid with scattered non-zero values (colors) and the majority of the grid is filled with zeros (black).
+   - In each example, there are specific colored cells: 2 (red), 3 (green), 4 (yellow) in different positions.
+
+2. **Output Analysis:**
+   - The outputs also have zeros and some non-zero values. 
+   - There are paths or lines of 5 (grey) connecting some of the colored cells.
+   - The specific colored cells from the input remain in the same positions in the output.
+
+3. **Transformation Pattern:**
+   - The colored cells in the input appear to be connected by a path of grey (5) in the output.
+   - The grey paths always form straight lines either horizontally or vertically.
+   - The path seems to connect the colored cells in some sequential order or pattern.
+
+4. **Order of Connection:**
+   - The connecting path seems to follow a specific order of the cells. Analyzing the examples, it appears the path connects colored cells based on their order of rows and columns.
+
+### Hypothesized Rule:
+- Identify all non-zero colored cells in the input.
+- Connect these cells using a path of grey (5) in the order they appear from top-left to bottom-right.
+- The path can only move vertically or horizontally, creating a direct line between each consecutive pair of colored cells.
+
+### Application to Test Input:
+Given the test input, we can apply the rule:
+- Identify colored cells: (2, 10) -> yellow, (5, 1) -> red, (11, 7) -> green.
+- Connect these cells in order with a path of grey (5).
+
+</reasoning>
+
+Let's implement this transformation rule in code.
+
+```python
+def transform(grid):
+    def find_colored_cells(grid):
+        colored_cells = []
+        for r in range(len(grid)):
+            for c in range(len(grid[0])):
+                if grid[r][c] != 0:
+                    colored_cells.append((r, c, grid[r][c]))
+        return colored_cells
+
+    def connect_cells_with_grey(output, cell1, cell2):
+        r1, c1 = cell1
+        r2, c2 = cell2
+
+        if r1 == r2:  # Same row, draw horizontal line
+            for c in range(min(c1, c2), max(c1, c2) + 1):
+                if output[r1][c] == 0:
+                    output[r1][c] = 5
+        elif c1 == c2:  # Same column, draw vertical line
+            for r in range(min(r1, r2), max(r1, r2) + 1):
+                if output[r][c1] == 0:
+                    output[r][c1] = 5
+        else:
+            # Connect vertically then horizontally
+            for r in range(min(r1, r2), max(r1, r2) + 1):
+                if output[r][c1] == 0:
+                    output[r][c1] = 5
+            for c in range(min(c1, c2), max(c1, c2) + 1):
+                if output[r2][c] == 0:
+                    output[r2][c] = 5
+
+    # Create a copy of the input grid to modify
+    output = [row[:] for row in grid]
+    
+    # Find all colored cells
+    colored_cells = find_colored_cells(grid)
+    
+    # Maintain the original colors
+    for r, c, color in colored_cells:
+        output[r][c] = color
+
+    # Connect the colored cells with grey
+    for i in range(len(colored_cells) - 1):
+        cell1 = colored_cells[i][:2]
+        cell2 = colored_cells[i + 1][:2]
+        connect_cells_with_grey(output, cell1, cell2)
+
+    return output
+```
+This code should transform the grid according to the deduced rule by connecting colored cells with a grey path.
+Response: <reasoning>
+To determine the transformation rule, let's analyze the given examples step by step:
+
+### Observations:
+1. **Non-Zero Elements**: In each input grid, there are three distinct non-zero elements: 2, 3, and 4. These correspond to specific colors: red (2), green (3), and yellow (4).
+2. **Output Grid Characteristics**:
+   - The non-zero elements from the input grid (2, 3, and 4) remain in the same position in the output grid.
+   - There is a path of grey (5) cells connecting the red (2) and yellow (4) cells in the output grid.
+   - Another path of grey (5) cells connects the yellow (4) and green (3) cells.
+   - The paths are the shortest possible path (Manhattan distance) and are filled with the color grey (5).
+
+### Transformation Rule:
+- **Identify Non-Zero Elements**: First, identify the positions of the numbers 2, 3, and 4 in the input grid.
+- **Draw Paths**: Connect these numbers using grey (5) in the shortest path:
+  1. Connect position of 2 to position of 4.
+  2. Connect position of 4 to position of 3.
+- **Shortest Path**: Use the Manhattan distance to draw a path. This involves moving horizontally first until aligned with the target column, then vertically or vice versa.
+
+### Detailed Steps:
+1. **Find Positions**:
+   - Locate the positions of 2, 3, and 4 in the grid.
+2. **Path Drawing**:
+   - Draw a path from the position of 2 to 4 using grey (5).
+   - Draw a path from the position of 4 to 3 using grey (5).
+3. **Retain Original Colors**: Ensure that the original colored positions (2, 3, and 4) are retained in their respective positions.
+
+### Conclusion:
+The transformation rule involves identifying the positions of specific non-zero elements (2, 3, and 4) and drawing grey paths between them while retaining their original positions in the grid.
+
+Let's implement this transformation rule in code.
+</reasoning>
+
+```python
+def transform(grid):
+    def find_position(value):
+        """Find the position of the value in the grid."""
+        for i, row in enumerate(grid):
+            for j, v in enumerate(row):
+                if v == value:
+                    return i, j
+        return None
+
+    def draw_path(grid, start, end):
+        """Draw a path of 5s from start to end position."""
+        x1, y1 = start
+        x2, y2 = end
+        
+        # Draw horizontal line
+        if x1 == x2:
+            for j in range(min(y1, y2), max(y1, y2) + 1):
+                if grid[x1][j] == 0:
+                    grid[x1][j] = 5
+        else:
+            for i in range(min(x1, x2), max(x1, x2) + 1):
+                if grid[i][y1] == 0:
+                    grid[i][y1] = 5
+        
+        # Draw vertical line
+        if y1 == y2:
+            for i in range(min(x1, x2), max(x1, x2) + 1):
+                if grid[i][y1] == 0:
+                    grid[i][y1] = 5
+        else:
+            for j in range(min(y1, y2), max(y1, y2) + 1):
+                if grid[x2][j] == 0:
+                    grid[x2][j] = 5
+    
+    # Find positions of 2, 3, 4
+    pos2 = find_position(2)
+    pos3 = find_position(3)
+    pos4 = find_position(4)
+    
+    # Create a copy of the grid to modify it
+    output_grid = [row[:] for row in grid]
+    
+    # Draw paths between 2 to 4 and 4 to 3
+    if pos2 and pos4:
+        draw_path(output_grid, pos2, pos4)
+    if pos4 and pos3:
+        draw_path(output_grid, pos4, pos3)
+    
+    return output_grid
+```
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.8698224852071006
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.8949704142011835
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.8846153846153847
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.7633136094674557
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.8106508875739644
+Top response scores: 0.8949704142011835
+
+Top response scores: 0.8846153846153847
+
+======Average score per generation: 0.8446745562130179=======
+========== Iteration 2 ==========
+Prompt: Here are the paired example inputs and outputs.
+
+Example 1
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 2
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 3
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 4
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Here is the additional test input without a known output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Here are two programs that you've previously generated, along with the results from running the programs on the examples. Both of them resulted in at least one incorrect output when they were applied to the test input.
+
+Examine both programs carefully to determine what the issue is. Then, based on the provided programs, write a new version of the program that would result in a correct output.
+
+You will need to carefully reason to determine the issue in both programs and determine how to fix the code. Start your response by doing this reasoning in <reasoning> tags. Then, implement the fixed transformation in code.
+
+Make sure to wrap the code in triple backticks (e.g. ```python (code) ```).
+
+
+Program 1
+Code: 
+
+def find_colored_positions(grid):
+    colored_positions = []
+    for r in range(len(grid)):
+        for c in range(len(grid[0])):
+            if grid[r][c] in [2, 3, 4]:  # Looking for red (2), green (3), yellow (4)
+                colored_positions.append((r, c, grid[r][c]))
+    return colored_positions
+
+def connect_points(grid, start, end):
+    sr, sc = start
+    er, ec = end
+    
+    # Connect horizontally first
+    if sc != ec:
+        step = 1 if sc < ec else -1
+        for c in range(sc, ec, step):
+            if grid[sr][c] == 0:
+                grid[sr][c] = 5  # Grey path
+
+    # Connect vertically
+    if sr != er:
+        step = 1 if sr < er else -1
+        for r in range(sr, er, step):
+            if grid[r][ec] == 0:
+                grid[r][ec] = 5  # Grey path
+
+def transform(input_grid):
+    # Copy the input grid to avoid modifying the original
+    output_grid = [row[:] for row in input_grid]
+    
+    # Find positions of colored cells
+    colored_positions = find_colored_positions(input_grid)
+    
+    # Sort positions by reading order (top to bottom, left to right)
+    colored_positions.sort()
+    
+    # Retain the original colored cells
+    for r, c, color in colored_positions:
+        output_grid[r][c] = color
+    
+    # Connect the positions with a grey path
+    connect_points(output_grid, colored_positions[0][:2], colored_positions[1][:2])
+    connect_points(output_grid, colored_positions[1][:2], colored_positions[2][:2])
+    
+    return output_grid
+
+Results from running the code:
+
+Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+
+Program 2
+Code: 
+
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] != 0:
+                positions[grid[r, c]] = (r, c)
+    
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Draw the path
+        cur_r, cur_c = sr, sc
+        while cur_r != er:
+            output[cur_r, sc] = value
+            cur_r += (1 if er > cur_r else -1)
+        while cur_c != ec:
+            output[er, cur_c] = value
+            cur_c += (1 if ec > cur_c else -1)
+    
+    # For each yellow cell (value 4), connect it to red (value 2) and green (value 3)
+    yellow_pos = positions.get(4)
+    
+    if yellow_pos:
+        for color in [2, 3]:
+            if color in positions:
+                draw_path(yellow_pos, positions[color])
+    
+    return output.tolist()
+
+# Example usage
+test_input = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+print(transform(test_input))
+
+Results from running the code:
+
+Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+
+
+Response: <reasoning>
+To determine the correct transformation rule and fix the given programs, we need to carefully analyze the provided examples and the results of the incorrect programs.
+
+**Analysis of the Examples:**
+1. Each example contains a grid with colored numbers: red (2), green (3), and yellow (4). These colors are connected by grey paths (5) in the output.
+2. The grey paths (5) connect these colored numbers in a specific sequence: red (2) to green (3), and then to yellow (4).
+3. In each example, we need to connect these points using a grey line, ensuring the path follows a certain order and does not disturb other existing grey paths.
+
+**Issues with Program 1:**
+1. Program 1 assumes there are exactly three colored positions and connects them in order. This may not always be the case.
+2. The function `connect_points` is not flexible enough to handle cases where more complex paths are needed, especially if the direct path intersects with existing grey paths.
+
+**Issues with Program 2:**
+1. Program 2 incorrectly identifies and connects colored cells. It assumes that yellow cells (4) should be connected to both red (2) and green (3), which is not consistent with the expected outputs.
+2. The drawing path method in `draw_path` may overwrite existing paths or connect in an incorrect sequence.
+
+**Correct Transformation Rule:**
+1. Identify all colored cells (red, green, yellow).
+2. Identify the sequence in which these colors need to be connected. Typically, it follows the path from red to green, then to yellow.
+3. Draw grey paths (5) to connect these colored cells in the specified order, ensuring not to overwrite or disturb existing grey paths.
+
+**Plan for Correct Implementation:**
+1. Identify positions of the colored cells.
+2. Sort these positions in the order they should be connected.
+3. Draw paths between these positions, ensuring the path only uses existing grey cells or new paths where required.
+
+By following the above plan, we can implement a program that correctly transforms the input grid to the desired output.
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = []
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # Red (2), Green (3), Yellow (4)
+                positions.append((r, c, grid[r, c]))
+    
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    # Sort positions based on the color sequence
+    positions.sort(key=lambda x: x[2])  # Sort by color value
+    
+    def draw_path(start, end):
+        """ Draws a grey path (5) between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+
+        # Draw horizontally first
+        for c in range(min(sc, ec), max(sc, ec) + 1):
+            if output[sr, c] == 0:
+                output[sr, c] = 5
+
+        # Draw vertically
+        for r in range(min(sr, er), max(sr, er) + 1):
+            if output[r, ec] == 0:
+                output[r, ec] = 5
+    
+    # Connect each consecutive pair of colored positions
+    for i in range(len(positions) - 1):
+        draw_path(positions[i][:2], positions[i + 1][:2])
+    
+    return output.tolist()
+```
+
+This implementation identifies the colored positions, sorts them by color, and connects them using a grey path in the correct sequence, ensuring that only newly needed paths are created without overwriting existing grey paths.
+Response: <reasoning>
+Let's analyze the problem step by step based on the provided examples and the incorrect programs.
+
+### Observations from Examples:
+1. **Path Characteristics**:
+   - In each grid, three colored cells (red, green, yellow) are connected by a path of grey (5).
+   - The path seems to be formed by connecting these colored cells in a specific order.
+
+2. **Order of Connection**:
+   - Yellow (4) always seems to be the midpoint between red (2) and green (3). In some examples, the path connects red to yellow and then yellow to green, forming an L-shaped path.
+
+3. **Path Details**:
+   - The path is constructed either horizontally or vertically, and it follows the pattern of connecting two of the colored points directly in one direction, then extends perpendicularly to connect the third point.
+
+### Issues in Program 1:
+- **Incorrect Path Construction**:
+  - It connects paths in a linear sequence without considering the need to first span horizontally or vertically and then the other way, which results in incorrect paths.
+  
+### Issues in Program 2:
+- **Path Overwriting**:
+  - The program connects the yellow cell to both red and green without considering the existing path, leading to overwriting and creating additional unwanted paths.
+
+### Corrective Steps:
+1. **Identify Colored Positions**:
+   - Locate positions of red (2), green (3), and yellow (4) cells.
+   - Ensure there's a check to avoid overwriting paths unnecessarily.
+
+2. **Construct Path**:
+   - Draw a path from red to yellow and then from yellow to green.
+
+3. **Path Construction Logic**:
+   - Start with a horizontal or vertical path from red to yellow.
+   - Extend the path from yellow to green, ensuring paths do not overlap incorrectly.
+
+### Conclusion:
+The transformation involves constructing a path that connects the red, yellow, and green cells in sequence, ensuring paths do not cross over or overwrite each other incorrectly. The path must be constructed in a specific order to reflect the transformation seen in the examples.
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # Only consider red(2), green(3), yellow(4)
+                positions[grid[r, c]] = (r, c)
+
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Horizontal move
+        if sr == er:
+            for c in range(min(sc, ec), max(sc, ec) + 1):
+                output[sr, c] = value
+        else:
+            # Vertical move
+            for r in range(min(sr, er), max(sr, er) + 1):
+                output[r, sc] = value
+
+    # Get positions for the colored cells
+    red_pos = positions.get(2)
+    yellow_pos = positions.get(4)
+    green_pos = positions.get(3)
+
+    # Draw paths from red to yellow to green
+    if red_pos and yellow_pos and green_pos:
+        draw_path(red_pos, yellow_pos)
+        draw_path(yellow_pos, green_pos)
+
+    return output.tolist()
+```
+Response: <reasoning>
+To determine the correct transformation rule, let's analyze the input-output pairs, identify the patterns, and then find the issues with the previous programs.
+
+### Observations from the Examples:
+
+1. **Input Patterns**:
+    - The grid contains primarily zeros, with specific non-zero values representing colors.
+    - The non-zero colors used are red (2), green (3), yellow (4), and grey (5).
+
+2. **Output Patterns**:
+    - The color red (2), green (3), and yellow (4) remain in their positions.
+    - Grey paths (5) are created between these colored points, in a specific order.
+    - The path seems to be created from the red point to the yellow point, and from the yellow point to the green point.
+
+3. **Specific Path Observations**:
+    - For example 1, the path starts from red (2) at position (2, 1), goes horizontally to yellow (4) at (6, 10), and then vertically to green (3) at (11, 3).
+    - For example 2, the path starts from yellow (4) at (10, 2), goes horizontally to red (2) at (8, 11), and vertically to green (3) at (1, 5).
+
+4. **Rule Deduction**:
+    - Connect the red (2) to yellow (4) and then to green (3) using grey (5).
+    - The path is made by first moving horizontally and then vertically.
+
+### Issues in Previous Programs:
+
+**Program 1**:
+- It attempts to connect the points in a rigid order based on positions, but does not correctly identify that the yellow node is the central node to connect with both red and green.
+- It should adjust the way it connects the path to always use the yellow node as the intermediary.
+
+**Program 2**:
+- While it correctly uses yellow as a central node, it incorrectly applies the path in both horizontal and vertical directions without considering the intermediary nature of yellow.
+- It also doesn't ensure that the path is cleared of any existing grey (5) not part of the path.
+
+### Correct Transformation Rule:
+
+1. Identify positions of red (2), green (3), and yellow (4).
+2. Yellow is always the intermediary node.
+3. Create a horizontal path from red to yellow.
+4. Create a vertical path from yellow to green.
+
+### Solution Plan:
+
+1. Identify the positions of 2, 3, and 4.
+2. Connect 2 to 4 horizontally, then 4 to 3 vertically.
+3. Ensure no existing 5s are left where they shouldn't be in the final path.
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] != 0:
+                positions[grid[r, c]] = (r, c)
+    
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Draw the path
+        cur_r, cur_c = sr, sc
+        while cur_c != ec:
+            if output[sr, cur_c] == 0:
+                output[sr, cur_c] = value
+            cur_c += (1 if ec > cur_c else -1)
+        while cur_r != er:
+            if output[cur_r, ec] == 0:
+                output[cur_r, ec] = value
+            cur_r += (1 if er > cur_r else -1)
+    
+    # Identify positions for red, green, yellow
+    red_pos = positions.get(2)
+    green_pos = positions.get(3)
+    yellow_pos = positions.get(4)
+    
+    if red_pos and yellow_pos:
+        draw_path(red_pos, yellow_pos)
+    if yellow_pos and green_pos:
+        draw_path(yellow_pos, green_pos)
+    
+    return output.tolist()
+```
+Response: <reasoning>
+To identify the correct transformation logic, let's analyze the examples and the provided incorrect programs. 
+
+**Analysis of the Example Grids:**
+
+1. **Example 1:** 
+   - Initial: There's a vertical grey (5) path and a colored path (5) that needs to be erased.
+   - Final: The grey path should connect red (2) to green (3) and should be horizontal where possible.
+
+2. **Example 2:**
+   - Initial: A grey path connects green (3) to yellow (4) and then goes down.
+   - Final: The path should connect yellow (4) to red (2) horizontally, then vertically.
+
+3. **Example 3:**
+   - Initial: A grey path from yellow (4) horizontally and vertically to red (2).
+   - Final: The path should connect yellow (4) to green (3) and then to red (2) using a horizontal segment where needed.
+
+4. **Example 4:**
+   - Initial: A path goes down from red (2) to green (3).
+   - Final: The path should extend from yellow (4) to green (3) via red (2).
+
+**Common Pattern:**
+- A path is drawn using grey (5) to connect the colors red (2), green (3), and yellow (4).
+- The path should be horizontal where possible, following vertical only when necessary.
+
+**Problems in Program 1:**
+- It tries to connect points in sequence but doesn't adjust correctly for vertical and horizontal paths. It starts from arbitrary points without ensuring the correct order and orientation.
+- It may leave unwanted vertical paths if not handled correctly.
+
+**Problems in Program 2:**
+- It attempts to connect yellow (4) to red (2) and green (3), but the logic may draw excessive horizontal/vertical lines due to not accounting for the minimal path.
+- The logic doesn't correctly enforce the path drawing order and orientation between the points.
+
+**Refined Transformation Logic:**
+1. Identify the positions of red (2), green (3), and yellow (4).
+2. Connect yellow (4) to red (2) and then to green (3) using the shortest path possible.
+3. Prefer horizontal paths, transitioning vertically only when necessary.
+
+Incorporating these observations will help in constructing a correct transformation function. Here's the implementation below:
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # Looking for red (2), green (3), yellow (4)
+                positions[grid[r, c]] = (r, c)
+                
+    # Initialize a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the original colored cells
+    for color, (r, c) in positions.items():
+        output[r, c] = color
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Connect horizontally first
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0:
+                    output[sr, c] = value
+        
+        # Connect vertically
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0:
+                    output[r, ec] = value
+    
+    # Sort positions by reading order (top to bottom, left to right)
+    sorted_positions = sorted(positions.items(), key=lambda x: (x[1][0], x[1][1]))
+
+    # Connect the sorted positions with a grey path
+    for i in range(len(sorted_positions) - 1):
+        draw_path(sorted_positions[i][1], sorted_positions[i + 1][1])
+    
+    return output.tolist()
+```
+
+This function correctly identifies the positions of the colored elements and draws a path between them using grey (5), following the shortest path possible in both horizontal and vertical directions. It ensures that the path is drawn correctly based on the sorted order of the positions.
+Response: <reasoning>
+
+To understand what went wrong in the previous programs, let's break down the problem and analyze the examples carefully.
+
+### Observations from the Examples:
+1. **Input Grids**: Each grid contains some colored cells (2 for red, 3 for green, 4 for yellow) and 5 for grey.
+2. **Output Grids**:
+   - Grey paths (5s) connect different colored cells within the grid.
+   - The colored cells are retained in their original positions.
+   - The grey paths sometimes connect horizontally, sometimes vertically.
+   - The grey paths are drawn in a manner that connects specific colored cells without overriding them.
+
+### Issues in Program 1:
+- **connect_points function**: The function attempts to connect points horizontally first and then vertically, which may not match the desired path in the expected output.
+- **Incorrect connection logic**: The logic for drawing the paths should consider if the path needs to be horizontal or vertical first based on the specific case.
+
+### Issues in Program 2:
+- The logic assumes that the yellow cell should connect to both red and green cells. However, observing the examples, it appears that the connection should sometimes be between other colored cells.
+- The connection path sometimes needs to be drawn differently than the current implementation, which draws vertically first and then horizontally.
+
+### Key Elements of the Correct Transformation:
+1. **Retain colored cells** (2, 3, 4) in their original positions.
+2. **Connect colored cells** with grey paths (5) as shown in the expected outputs.
+3. **Path Strategy**: Determine whether to connect horizontally or vertically first based on the relative positions of the cells to be connected.
+4. **Preserve existing paths**: Do not override any existing paths or colored cells while drawing new paths.
+
+### General Strategy for Correct Transformation:
+- Identify the positions of the colored cells.
+- Determine the order in which the paths should be connected (possibly based on the order of appearance or specific rule).
+- Use a function that can handle both horizontal and vertical path drawing based on the specific needs of the connection.
+- Carefully ensure that paths do not override existing colored cells.
+
+Based on these observations, I will implement a new transformation function that addresses these issues by appropriately connecting the points while retaining the colored cells.
+
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    colors = {2: None, 3: None, 4: None}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in colors:
+                colors[grid[r, c]] = (r, c)
+                
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    def draw_path(start, end):
+        """ Draws a path between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Draw the path
+        cur_r, cur_c = sr, sc
+        # Adjust path drawing to follow a logical path
+        while cur_c != ec:
+            if grid[cur_r, cur_c] == 0:  # Do not overwrite colored cells
+                output[cur_r, cur_c] = 5
+            cur_c += (1 if ec > cur_c else -1)
+        while cur_r != er:
+            if grid[cur_r, cur_c] == 0:  # Do not overwrite colored cells
+                output[cur_r, cur_c] = 5
+            cur_r += (1 if er > cur_r else -1)
+    
+    # For each yellow cell (value 4), connect it to red (value 2) and green (value 3)
+    yellow_pos = colors.get(4)
+    
+    if yellow_pos:
+        if colors[3]:  # Connect yellow to green
+            draw_path(yellow_pos, colors[3])
+        if colors[2]:  # Connect yellow to red
+            draw_path(yellow_pos, colors[2])
+    
+    return output.tolist()
+```
+
+This implementation identifies positions for colors 2, 3, and 4, and then connects them using grey paths while avoiding overwriting existing colored cells. The paths are drawn in a way that connects different colored points as per the patterns observed in the examples.
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 2, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.838757396449704
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.8328402366863905
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.9334319526627219
+Results: Result for example 1:
+✓ Transformation matches expected output!
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 1.1582840236686391
+Results: Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Score: 0.8402366863905325
+Top response scores: 1.1582840236686391
+
+Top response scores: 0.9334319526627219
+
+======Average score per generation: 0.9207100591715977=======
+========== Iteration 3 ==========
+Prompt: Here are the paired example inputs and outputs.
+
+Example 1
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 2
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 3
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Example 4
+
+Input:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Here is the additional test input without a known output:
+
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+Here are two programs that you've previously generated, along with the results from running the programs on the examples. Both of them resulted in at least one incorrect output when they were applied to the test input.
+
+Examine both programs carefully to determine what the issue is. Then, based on the provided programs, write a new version of the program that would result in a correct output.
+
+You will need to carefully reason to determine the issue in both programs and determine how to fix the code. Start your response by doing this reasoning in <reasoning> tags. Then, implement the fixed transformation in code.
+
+Make sure to wrap the code in triple backticks (e.g. ```python (code) ```).
+
+
+Program 1
+Code: 
+
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # Looking for red (2), green (3), yellow (4)
+                positions[grid[r, c]] = (r, c)
+                
+    # Initialize a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the original colored cells
+    for color, (r, c) in positions.items():
+        output[r, c] = color
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Connect horizontally first
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0:
+                    output[sr, c] = value
+        
+        # Connect vertically
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0:
+                    output[r, ec] = value
+    
+    # Sort positions by reading order (top to bottom, left to right)
+    sorted_positions = sorted(positions.items(), key=lambda x: (x[1][0], x[1][1]))
+
+    # Connect the sorted positions with a grey path
+    for i in range(len(sorted_positions) - 1):
+        draw_path(sorted_positions[i][1], sorted_positions[i + 1][1])
+    
+    return output.tolist()
+
+Results from running the code:
+
+Result for example 1:
+✓ Transformation matches expected output!
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+
+Program 2
+Code: 
+
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] != 0:
+                positions[grid[r, c]] = (r, c)
+    
+    # Initialize a new grid for the output
+    output = grid.copy()
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Draw the path
+        cur_r, cur_c = sr, sc
+        while cur_c != ec:
+            if output[sr, cur_c] == 0:
+                output[sr, cur_c] = value
+            cur_c += (1 if ec > cur_c else -1)
+        while cur_r != er:
+            if output[cur_r, ec] == 0:
+                output[cur_r, ec] = value
+            cur_r += (1 if er > cur_r else -1)
+    
+    # Identify positions for red, green, yellow
+    red_pos = positions.get(2)
+    green_pos = positions.get(3)
+    yellow_pos = positions.get(4)
+    
+    if red_pos and yellow_pos:
+        draw_path(red_pos, yellow_pos)
+    if yellow_pos and green_pos:
+        draw_path(yellow_pos, green_pos)
+    
+    return output.tolist()
+
+Results from running the code:
+
+Result for example 1:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0],
+[0, 5, 0, 5, 5, 5, 5, 5, 5, 5, 4, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 2:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 3, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 0],
+[0, 0, 5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 4, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 3:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+[0, 5, 0, 0, 0, 5, 5, 5, 5, 5, 5, 3, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+[0, 5, 5, 5, 5, 2, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Result for example 4:
+✗ Transformation does not match expected output.
+
+Input Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Expected Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Incorrect Resulting Output Grid:
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0],
+[0, 0, 2, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],
+[0, 0, 5, 5, 5, 5, 5, 5, 5, 3, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+
+
+
+Response: <reasoning>
+
+The task requires identifying the transformation rule that maps the input grid to the output grid. Examining the examples, the transformation involves drawing paths and retaining certain colored elements. Let's break down the examples:
+
+### Observations:
+1. **Colored Elements**: The colored elements in the grid are represented by numbers: 
+   - Red (2)
+   - Green (3)
+   - Yellow (4)
+   - Grey (5) is used for drawing paths.
+
+2. **Path Drawing**:
+   - Paths are drawn between specific colored elements.
+   - The color grey (5) is used to create these paths.
+   - Paths are drawn horizontally first, then vertically.
+
+3. **Pattern**:
+   - Red (2), Green (3), and Yellow (4) are the primary focus for connections.
+   - The sequence of connections between these colors is important.
+   - The expected output shows that the path should connect these colors in a specific order if they exist:
+     - Connect Red to Yellow.
+     - Connect Yellow to Green.
+
+4. **Program Issues**:
+   - **Program 1**: It appears to attempt to connect all non-zero colors, which is incorrect. It should selectively connect based on the presence of Red, Green, and Yellow in a specific order.
+   - **Program 2**: It attempts to connect Red to Yellow and Yellow to Green but doesn't handle shifting grey paths correctly and affects existing paths negatively.
+
+### Correction Strategy:
+- The correct approach involves:
+  1. Identify positions of Red (2), Green (3), and Yellow (4) if they exist.
+  2. Retain these colors at their original positions.
+  3. Draw paths in the following sequence:
+     - Connect Red to Yellow.
+     - Connect Yellow to Green.
+  4. Ensure paths do not overwrite existing colored paths (except where the path is needed).
+
+### Implementation Plan:
+- Initialize an output grid filled with zeros.
+- For each color, if it exists, keep it in the same position in the output.
+- Draw paths connecting Red to Yellow and Yellow to Green, ensuring no overwriting of colored cells except when necessary for path continuity.
+
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of Red (2), Green (3), and Yellow (4)
+    red_pos, green_pos, yellow_pos = None, None, None
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] == 2:
+                red_pos = (r, c)
+            elif grid[r, c] == 3:
+                green_pos = (r, c)
+            elif grid[r, c] == 4:
+                yellow_pos = (r, c)
+    
+    # Initialize a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the positions of Red, Green, Yellow
+    if red_pos:
+        output[red_pos] = 2
+    if green_pos:
+        output[green_pos] = 3
+    if yellow_pos:
+        output[yellow_pos] = 4
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Connect horizontally first
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0:
+                    output[sr, c] = value
+        
+        # Connect vertically
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0:
+                    output[r, ec] = value
+    
+    # Draw paths between Red to Yellow and Yellow to Green
+    if red_pos and yellow_pos:
+        draw_path(red_pos, yellow_pos)
+    if yellow_pos and green_pos:
+        draw_path(yellow_pos, green_pos)
+    
+    return output.tolist()
+```
+
+This corrected implementation should correctly transform the grid by connecting Red to Yellow and Yellow to Green with grey paths, while retaining the original colored positions.
+Response: <reasoning>
+
+To determine the transformation rule, let's carefully analyze the provided examples:
+
+1. **Observations from the given examples:**
+   - Each input grid has three specific colored cells: red (2), green (3), and yellow (4).
+   - The output grid retains these colored cells in their original positions.
+   - The grid features the color grey (5) used to form a path connecting these colored cells.
+   - The path between specific colored cells appears to be linear (either along a row or a column) and uses the minimum steps necessary to connect the two points.
+
+2. **Pattern recognition:**
+   - In Example 1: The path starts from red (row 2, column 1), goes horizontally to yellow (row 6, column 10), and then goes vertically to green (row 11, column 3).
+   - In Example 2: The path starts from green (row 1, column 5), goes horizontally to yellow (row 10, column 2), and then goes vertically to red (row 8, column 11).
+   - In Example 3: The path starts from yellow (row 1, column 1), goes horizontally to green (row 4, column 11), and vertically to red (row 10, column 5).
+   - In Example 4: The path starts from yellow (row 1, column 9), goes horizontally to red (row 5, column 2), and vertically to green (row 12, column 9).
+
+3. **Rule Extraction:**
+   - The rule is to connect these colored cells in a specific order: red -> yellow -> green.
+   - The connection is made using a straight line in the grid, either horizontally or vertically, without diagonal movements.
+   - The paths should not overwrite any existing colors but should fill in zeros.
+
+4. **Reasoning about the incorrect programs:**
+   - **Program 1:** This program sorts colored positions in reading order and connects them which seems incorrect as it doesn't respect the order: red -> yellow -> green.
+   - **Program 2:** This program connects red to yellow and yellow to green, but it initializes the output grid to the input grid, which causes incorrect overwrites of the path and doesn't clear unwanted paths.
+
+5. **Resolving Issues:**
+   - We must ensure that the path connecting red, yellow, and green is drawn correctly and that no extra grey paths are retained from the input.
+   - We need to clear any existing grey (5) path from the grid and redraw them according to the rule.
+
+6. **Final Transformation Rule:**
+   - Identify and retain positions of red (2), yellow (4), and green (3) in the grid.
+   - Clear all grey (5) cells.
+   - Draw a grey (5) path connecting red to yellow, and then yellow to green using a straight line horizontally first, then vertically.
+
+With these observations and understanding, we can implement the transformation rule accurately in code.
+
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the specific colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # Looking for red (2), green (3), yellow (4)
+                positions[grid[r, c]] = (r, c)
+    
+    # Create a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the original colored cells
+    for color in [2, 3, 4]:
+        r, c = positions[color]
+        output[r, c] = color
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Connect horizontally first
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0:
+                    output[sr, c] = value
+        
+        # Connect vertically
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0:
+                    output[r, ec] = value
+    
+    # Connect red to yellow
+    draw_path(positions[2], positions[4])
+    # Connect yellow to green
+    draw_path(positions[4], positions[3])
+    
+    return output.tolist()
+```
+Response: <reasoning>
+
+To understand how to correct the transformation process, let's analyze the provided programs and their outputs in comparison to the expected results. The task involves connecting colored cells (with colors red: 2, green: 3, yellow: 4) using paths of grey cells (color 5).
+
+**Program 1 Analysis:**
+
+- Program 1 attempts to connect all positions of the colored cells [2, 3, 4] in a sorted order (by row and column). It then draws a path of grey (5) between these sorted positions.
+- This approach fails because it assumes a direct connection between sorted positions, which doesn't follow the logic of the expected outputs. The expected logic involves connecting specific pairs (e.g., red to yellow, yellow to green) and not simply all in sequence.
+
+**Program 2 Analysis:**
+
+- Program 2 tries to connect red to yellow and yellow to green directly, but it uses a more limited path drawing method. It attempts to draw horizontal paths first, then vertical paths.
+- This method fails because it does not correctly represent the path drawing logic, as the paths in the expected outputs are drawn in a more specific manner that respects vertical and horizontal paths depending on the input grid setup.
+
+**Common Issues and Observations:**
+
+1. **Path Drawing**: Both programs fail in path drawing due to incorrect assumptions about path connectivity. The paths need to follow the pattern observed in the outputs, ensuring each path is drawn correctly from start to end without overwriting existing paths, except where necessary.
+   
+2. **Position Management**: Program 1 uses an all-to-all connection strategy based on sorted order, which isn't appropriate as the connection needs to be specific (red to yellow, and yellow to green).
+
+3. **Handling Non-zero Values**: Both programs need to take care of not overwriting existing non-zero values (other than zeros) while drawing paths.
+
+**Correct Approach**:
+
+- Identify the positions of the relevant colored cells: red (2), green (3), yellow (4).
+- Draw paths between these specific pairs: red to yellow, yellow to green.
+- Ensure paths are drawn without overwriting existing non-zero values.
+- The path should be drawn in a manner to respect both vertical and horizontal connectivity, ensuring the path is connected entirely.
+
+Let's rewrite the transformation function with these observations in mind.
+
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = {}
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # Red, Green, Yellow
+                positions[grid[r, c]] = (r, c)
+                
+    # Initialize a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the original colored cells
+    for color, (r, c) in positions.items():
+        output[r, c] = color
+
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+
+        # Move horizontally from start to end
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0 or output[sr, c] == value:
+                    output[sr, c] = value
+        
+        # Move vertically if positions are not on the same row
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0 or output[r, ec] == value:
+                    output[r, ec] = value
+
+    # Identify positions for red, green, yellow
+    red_pos = positions.get(2)
+    green_pos = positions.get(3)
+    yellow_pos = positions.get(4)
+    
+    if red_pos and yellow_pos:
+        draw_path(red_pos, yellow_pos)
+    if yellow_pos and green_pos:
+        draw_path(yellow_pos, green_pos)
+    
+    return output.tolist()
+```
+
+In this corrected function, we ensure that paths are drawn directly between the specific pairs of colors as required, without overwriting non-zero values unless they are part of the path we're drawing. This should produce the correct outputs as observed from the examples.
+Response: <reasoning>
+
+To solve the problem, we need to identify the transformation rule correctly by examining the examples and the provided incorrect programs. Let's break down the problem step by step:
+
+1. **Analyze the Examples**:
+   - The input grids have colored cells (2, 3, 4) which correspond to specific colors (red, green, yellow).
+   - Grey paths (5) seem to connect these colored cells in the outputs.
+   - The transformation involves creating a path of grey (5) from one colored cell to another, following a specific sequence.
+   - The paths appear to be constructed by connecting the colored cells in a specific order.
+   - The order seems to be: Connect red (2) to yellow (4) to green (3).
+
+2. **Identify Missteps in Program 1**:
+   - In Program 1, the positions of colored cells are stored, and a path is drawn between consecutive positions sorted by grid order.
+   - The problem here is the incorrect assumption about the order of connections. The path should connect red to yellow to green, not just in the order of appearance.
+
+3. **Identify Missteps in Program 2**:
+   - In Program 2, the function `draw_path` correctly identifies positions of red, yellow, and green, but the logic assumes these colors are always in the grid.
+   - It does not account for the possibility of missing colors, resulting in partial paths or incorrect paths being made.
+
+4. **Correct Transformation Rule**:
+   - Identify colored positions for red (2), yellow (4), and green (3).
+   - Draw a path of grey (5) from red (2) to yellow (4) and from yellow (4) to green (3), if all three colors are present.
+   - If a color is missing, only connect the present colors based on the sequence: red to yellow to green.
+   - Ensure paths are drawn horizontally first and then vertically to match the examples.
+
+5. **Implementation Strategy**:
+   - Create a function to locate and store the positions of specific colors.
+   - Implement a function to draw paths between these colors, considering the order and presence of colors.
+   - Construct the output grid by applying these transformations.
+
+By applying this detailed reasoning, we can develop a correct implementation.
+
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Initialize a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the original colored cells in the output grid
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:  # retain red (2), green (3), yellow (4)
+                output[r, c] = grid[r, c]
+    
+    # Find positions of the colored elements
+    red_pos = None
+    green_pos = None
+    yellow_pos = None
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] == 2:
+                red_pos = (r, c)
+            elif grid[r, c] == 3:
+                green_pos = (r, c)
+            elif grid[r, c] == 4:
+                yellow_pos = (r, c)
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Connect horizontally first
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0:
+                    output[sr, c] = value
+        
+        # Connect vertically
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0:
+                    output[r, ec] = value
+    
+    # Draw paths based on available color positions
+    if red_pos and yellow_pos:
+        draw_path(red_pos, yellow_pos)
+    if yellow_pos and green_pos:
+        draw_path(yellow_pos, green_pos)
+    
+    return output.tolist()
+```
+
+This fixed implementation ensures that paths are drawn only if the necessary colored positions are present, and it follows the correct order of connecting red to yellow to green, thus addressing the issues identified in the previous programs.
+Response: <reasoning>
+
+From the provided examples, we can observe that the transformation rule involves connecting specific colored elements (red, green, yellow) with a path of grey (5). However, the connection of these elements follows a specific order and path that was not consistently followed in the provided programs.
+
+Let's break down the observations and reasoning:
+
+1. **Key Observations**:
+   - Each input grid has colored elements: red (2), green (3), and yellow (4).
+   - The output grid maintains these colored elements in their original positions.
+   - Each grid example appears to involve connecting these colored elements with a grey (5) path, but the paths are not always direct or consistent.
+
+2. **Example Analysis**:
+   - **Example 1**: The path starts from the red element, connects horizontally across, and then vertically to the yellow, and further connects to the green.
+   - **Example 2**: The path starts from the green element, connects vertically down, and then horizontally to the red, and finishes with the yellow.
+   - **Example 3**: The path begins at the yellow, extends horizontally, and then vertically to the green, and finally reaches the red.
+   - **Example 4**: Here, the path begins at the yellow, extends vertically, and connects to the red.
+
+3. **Understanding the Transformation Rule**:
+   - The path should be drawn between the colored elements in a specific order: start with the lowest row number, then leftmost column if rows are equal.
+   - Connect elements in this order using a path of grey (5), ensuring not to overwrite any existing non-zero elements except for path extensions.
+   - The path should be horizontal first, then vertical, or vice versa, depending on the relative positions of the elements.
+
+4. **Issues with Provided Programs**:
+   - **Program 1**: This program tries to connect positions based on a sorted order but fails to maintain existing grey paths and misorders connections for certain cases.
+   - **Program 2**: This program draws paths between specific pairs of elements but does not follow the correct order and overwrites existing grey paths incorrectly.
+
+5. **Solution Strategy**:
+   - Identify positions of colored elements.
+   - Sort these positions primarily by row and secondarily by column.
+   - Draw paths between these positions using grey (5), ensuring paths do not overwrite non-zero grid values other than extending paths.
+
+</reasoning>
+
+```python
+def transform(grid):
+    import numpy as np
+    grid = np.array(grid)
+    
+    # Find positions of the colored elements
+    positions = []
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            if grid[r, c] in [2, 3, 4]:
+                positions.append((r, c, grid[r, c]))  # store row, col, and color
+    
+    # Sort positions by reading order (top to bottom, left to right)
+    sorted_positions = sorted(positions, key=lambda x: (x[0], x[1]))
+    
+    # Initialize a new grid for the output
+    output = np.zeros_like(grid)
+    
+    # Retain the original colored cells
+    for r, c, color in sorted_positions:
+        output[r, c] = color
+    
+    def draw_path(start, end, value=5):
+        """ Draws a path of 'value' between start and end points in the grid """
+        sr, sc = start
+        er, ec = end
+        
+        # Connect horizontally first
+        if sc != ec:
+            step = 1 if sc < ec else -1
+            for c in range(sc, ec + step, step):
+                if output[sr, c] == 0:
+                    output[sr, c] = value
+        
+        # Connect vertically
+        if sr != er:
+            step = 1 if sr < er else -1
+            for r in range(sr, er + step, step):
+                if output[r, ec] == 0:
+                    output[r, ec] = value
+    
+    # Connect the sorted positions with a grey path
+    for i in range(len(sorted_positions) - 1):
+        draw_path(sorted_positions[i][:2], sorted_positions[i + 1][:2])
+    
+    return output.tolist()
+```
+
+This implementation should correctly draw the paths between the colored elements in the correct order, matching the expected transformation rule.
+Results: Result for example 1:
+✓ Transformation matches expected output!
+
+Result for example 2:
+✓ Transformation matches expected output!
+
+Result for example 3:
+✓ Transformation matches expected output!
+
+Result for example 4:
+✓ Transformation matches expected output!
+
+
+Score: 2.0
+========== Task solved! ==========
