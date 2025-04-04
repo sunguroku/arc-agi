@@ -1,6 +1,6 @@
 # ARC-AGI Challenge
 
-This repo includes a few different approaches for the ARC-AGI challenge. I'd like to note that these are exploratory attempts that seek to prototype a few ideas, more so than a full-fledged research project that goes in-depth on a single approach, due to time and budget constraints. Particularly, instead of running evaluation on all 400 public test cases, I've only run evaluation on randomly sampled 10 test cases (largely because I do not have a lot of OpenAI credits), so these results are not statistically significant and at best useful as preliminary results to guide proper experiments.
+This repo includes a few different approaches for the ARC-AGI challenge. These are exploratory attempts that seek to prototype a few ideas, more so than a full-fledged research project that goes in-depth on a single approach, due to time and budget constraints. Particularly, instead of running evaluation on all 400 public test cases, I've only run evaluation on randomly sampled 10 test cases (largely because I do not have a lot of OpenAI credits), so these results are not statistically significant and at best useful as preliminary results to guide proper experiments.
 
 Below are the different approaches I've tried. For all approaches, I only used GPT-4o, solely because I only have credits on OpenAI platform.
 
